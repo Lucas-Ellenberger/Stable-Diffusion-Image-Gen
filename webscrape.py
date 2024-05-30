@@ -1,62 +1,82 @@
+import csv
 import requests
-import os
+from io import BytesIO
 from PIL import Image
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as ExcelImage
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 
-def download_image(url, file_path):
-    response = requests.get(url)
+# Path to the specific version of ChromeDriver compatible with your Chrome browser
+chromedriver_path = "/Users/niranjanabalaji/cse/cse144/dallemini/chromedriver"
+
+# Initialize Selenium WebDriver
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')  # Run headless Chrome
+service = ChromeService(executable_path=chromedriver_path, port=0)
+print("no help")
+driver = webdriver.Chrome(service=service, options=options)
+print("help")
+
+def fetch_image_url(driver, query):
+    search_url = f"https://www.google.com/search?tbm=isch&q={query}"
+    driver.get(search_url)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    image_tag = soup.find('img', {'class': 't0fcAb'})  # Find the first image
+    return image_tag['src'] if image_tag else None
+
+def download_image(image_url):
+    response = requests.get(image_url)
     if response.status_code == 200:
-        with open(file_path, 'wb') as file:
-            file.write(response.content)
-        return True
-    return False
+        return Image.open(BytesIO(response.content))
+    return None
 
-def check_disk_space(threshold=100):
-    """Check if the available disk space is above a certain threshold (in MB)."""
-    st = os.statvfs('/')
-    free_space = st.f_bavail * st.f_frsize / (1024 * 1024)  # Convert to MB
-    return free_space > threshold
+# Define the path to the CSV file
+csv_file_path = 'test-prompts.csv'
 
-def compress_image(file_path, quality=85):
-    """Compress the image to reduce its size."""
-    try:
-        img = Image.open(file_path)
-        img.save(file_path, optimize=True, quality=quality)
-        return True
-    except Exception as e:
-        print(f"Error compressing image: {e}")
-        return False
+# Create a new Excel workbook and select the active worksheet
+workbook = Workbook()
+worksheet = workbook.active
 
-def main():
-    # Replace with your actual Google Custom Search API key and CX
-    api_key = 'AIzaSyBI-nqVD-7pvcc1onML5znYdAXTUOiE_Fg'
-    cx = '47f4302be37f24705'
+# Set the headers
+worksheet.append(['Prompt', 'Image'])
 
-    query = input("Enter your prompt: ")
+# Read the CSV file
+with open(csv_file_path, 'r') as csvfile:
+    csvreader = csv.reader(csvfile)
+    headers = next(csvreader)  # Skip the header
 
-    if not check_disk_space():
-        print("Not enough disk space available.")
-        return
+    # Process each row in the CSV file
+    for i, row in enumerate(csvreader):
+        prompt = row[0]
+        image_url = fetch_image_url(driver,prompt)
+        
+        if image_url:
+            image = download_image(image_url)
+            if image:
+                # Save the image to a temporary file
+                image_file_path = f'image_{i}.png'
+                image.save(image_file_path)
 
-    search_url = f"https://www.googleapis.com/customsearch/v1?q={query}&cx={cx}&key={api_key}&searchType=image"
-    response = requests.get(search_url)
-    results = response.json()
+                # Create an Excel image object
+                excel_image = ExcelImage(image_file_path)
 
-    if 'items' in results:
-        # Taking the first image result
-        first_image_url = results['items'][0]['link']
-        print(f"Image URL: {first_image_url}")
+                # Append the prompt to the worksheet
+                worksheet.append([prompt, ''])
 
-        image_path = 'downloaded_image.jpg'
-        if download_image(first_image_url, image_path):
-            print(f"Image successfully downloaded and saved as {image_path}.")
-            if compress_image(image_path):
-                print(f"Image compressed and saved as {image_path}.")
+                # Add the image to the worksheet in the appropriate cell
+                image_cell = f'B{i+2}'  # Adjust for header row
+                worksheet.add_image(excel_image, image_cell)
             else:
-                print("Failed to compress image.")
+                worksheet.append([prompt, 'Image not found'])
         else:
-            print("Failed to download image.")
-    else:
-        print("No images found for the prompt.")
+            worksheet.append([prompt, 'Image not found'])
 
-if __name__ == "__main__":
-    main()
+# Save the workbook to a file
+excel_file_path = 'dataset_with_images.xlsx'
+workbook.save(excel_file_path)
+print(f'Saved Excel file with images to {excel_file_path}')
+
+# Close the Selenium WebDriver
+driver.quit()
