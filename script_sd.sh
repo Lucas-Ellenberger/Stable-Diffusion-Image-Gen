@@ -10,6 +10,7 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image_lora.py \
   --resolution=512 --center_crop --random_flip \
   --train_batch_size=1 \
   --gradient_accumulation_steps=4 \
+  --mixed_precision="fp16" \
   --max_train_steps=15000 \
   --learning_rate=1e-04 \
   --max_grad_norm=1 \
