@@ -15,6 +15,7 @@
 # limitations under the License.
 """Fine-tuning script for Stable Diffusion for text2image with support for LoRA."""
 
+# pip install -r ~/CSE144/requirements.txt
 import argparse
 import logging
 import math
