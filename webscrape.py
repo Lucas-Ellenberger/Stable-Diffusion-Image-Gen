@@ -72,7 +72,7 @@ GOOGLE_CSE_ID = 'd5ed84b1b5451429e'
 service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
 
 # Define the path to the CSV file
-csv_file_path = 'test2prompts.csv'
+csv_file_path = 'testmini-prompts.csv'
 
 # Add the directory containing the ChromeDriver executable to the PATH environment variable
 chromedriver_dir = '/path/to/chromedriver_directory'
@@ -144,7 +144,7 @@ except Exception as e:
 
 # Save the workbook to a file
 script_directory = os.path.dirname(os.path.realpath(__file__))
-excel_file_path = os.path.join(script_directory, 'dataset_with_images.xlsx')
+excel_file_path = os.path.join(script_directory, 'dataset_with_images_mini.xlsx')
 
 print("Script directory:", script_directory)
 
