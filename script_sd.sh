@@ -1,6 +1,6 @@
 export MODEL_NAME="runwayml/stable-diffusion-v1-5"
-export OUTPUT_DIR="~/CSE144/lora/small/"
-export HUB_MODEL_ID="CSE144-small-lora"
+export OUTPUT_DIR="CSE144/lora/small/"
+export HUB_MODEL_ID="CSE144-small-lora-2"
 export DATASET_NAME="LucasEllenberger/ChemistryImages"
 
 accelerate launch --mixed_precision="fp16"  train_text_to_image_lora.py \
@@ -11,7 +11,7 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image_lora.py \
   --train_batch_size=1 \
   --gradient_accumulation_steps=4 \
   --mixed_precision="fp16" \
-  --max_train_steps=15000 \
+  --max_train_steps=100 \
   --learning_rate=1e-04 \
   --max_grad_norm=1 \
   --lr_scheduler="cosine" --lr_warmup_steps=0 \
@@ -19,7 +19,7 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image_lora.py \
   --push_to_hub \
   --hub_model_id=${HUB_MODEL_ID} \
   --report_to=wandb \
-  --checkpointing_steps=500 \
+  --checkpointing_steps=25 \
   --validation_prompt="small beaker with purple liquid" \
   --seed=1337
 

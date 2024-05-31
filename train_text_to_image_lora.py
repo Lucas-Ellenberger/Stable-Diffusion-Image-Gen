@@ -958,9 +958,16 @@ def main():
             # run inference
             images = log_validation(pipeline, args, accelerator, epoch, is_final_validation=True)
 
+        # New addition!
+        # Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+        output_dir = Path(args.output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
+
         if args.push_to_hub:
             save_model_card(
                 repo_id,
+                # TODO: Remove if we generate images
                 images=images,
                 base_model=args.pretrained_model_name_or_path,
                 dataset_name=args.dataset_name,
@@ -978,3 +985,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
