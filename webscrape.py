@@ -7,6 +7,9 @@ from openpyxl import Workbook
 from openpyxl.drawing.image import Image as ExcelImage
 from googleapiclient.discovery import build
 from selenium import webdriver
+import numpy as np
+from PIL import Image
+
 
 def fetch_image_url(query):
     try:
@@ -23,6 +26,32 @@ def fetch_image_url(query):
     except Exception as e:
         print(f"Error fetching image URL: {e}")
         return None
+
+def resize_and_normalize_image(file_path, target_size=(512, 512)):
+    """Resize and normalize the image."""
+    try:
+        # Open the image
+        img = PILImage.open(file_path)
+
+        # Resize the image
+        img = img.resize(target_size, PILImage.LANCZOS)
+
+
+        # Normalize pixel values to range [0, 1]
+        img_array = np.array(img) / 255.0
+
+        # Create a new file path for the resized and normalized image
+        resized_normalized_path = os.path.splitext(file_path)[0] + "_resized_normalized.jpg"
+
+        # Save the resized and normalized image
+        img_resized_normalized = PILImage.fromarray((img_array * 255).astype(np.uint8))
+        img_resized_normalized.save(resized_normalized_path)
+
+        return resized_normalized_path
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return None
+
 
 def download_image(image_url):
     try:
@@ -85,11 +114,18 @@ try:
                     # Save the image locally before adding it to the worksheet
                     image_path = f"downloaded_image_{i}.jpg"
                     image.save(image_path)
-                    excel_image = ExcelImage(image_path)
-                    image_cell = f'B{i}'
-                    worksheet.row_dimensions[i].height = 120  # Set row height
-                    worksheet.column_dimensions['B'].width = 30  # Set column width
-                    worksheet.add_image(excel_image, image_cell)
+                    
+                    # Resize and normalize the image
+                    resized_image_path = resize_and_normalize_image(image_path)
+                    if resized_image_path:
+                        excel_image = ExcelImage(resized_image_path)
+                        image_cell = f'B{i}'
+                        worksheet.row_dimensions[i].height = 120  # Set row height
+                        worksheet.column_dimensions['B'].width = 30  # Set column width
+                        worksheet.add_image(excel_image, image_cell)
+                    else:
+                        print("Error: Failed to resize and normalize image")
+                        worksheet.cell(row=i, column=2, value='Image not found')
                 else:
                     print("Error: Image could not be downloaded")  # Print if image could not be downloaded
                     worksheet.cell(row=i, column=2, value='Image not found')
@@ -104,6 +140,7 @@ except FileNotFoundError:
     print(f"Error: CSV file '{csv_file_path}' not found.")
 except Exception as e:
     print(f"Error: {e}")
+
 
 # Save the workbook to a file
 script_directory = os.path.dirname(os.path.realpath(__file__))
