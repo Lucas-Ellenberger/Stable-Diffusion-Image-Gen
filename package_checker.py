@@ -1,6 +1,8 @@
 import importlib.util
 import sys
 
+# This file was used as a sanity check to ensure the listed packages were properly installed.
+
 # For illustrative purposes.
 names = ['pathlib', 'numpy', 'torch', 'huggingface_hub', 'packaging', 'tqdm', 'diffusers']
 
