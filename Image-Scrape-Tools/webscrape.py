@@ -67,8 +67,8 @@ def download_image(image_url):
     return None
 
 # Initialize the Google Custom Search service with your API key
-GOOGLE_API_KEY = 'AIzaSyAyZgmOlTt-7zgrBdrPJzSqRf6QhLzbWRA'
-GOOGLE_CSE_ID = 'd5ed84b1b5451429e'
+GOOGLE_API_KEY = ''
+GOOGLE_CSE_ID = ''
 service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
 
 # Define the path to the CSV file
@@ -114,7 +114,7 @@ try:
                     # Save the image locally before adding it to the worksheet
                     image_path = f"downloaded_image_{i}.jpg"
                     image.save(image_path)
-                    
+
                     # Resize and normalize the image
                     resized_image_path = resize_and_normalize_image(image_path)
                     if resized_image_path:
