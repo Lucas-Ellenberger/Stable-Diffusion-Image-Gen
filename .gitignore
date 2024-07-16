@@ -1,4 +1,4 @@
 .env/
 =*
 *.safetensors
-
+content/
